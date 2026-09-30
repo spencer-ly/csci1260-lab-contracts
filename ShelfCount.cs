@@ -62,6 +62,5 @@ namespace Lab2
         {
             return String.Format("{0,-6} #{1} {2,8:N2}", Aisle, Slot, valueOnHand);
         }
-
     }
 }
