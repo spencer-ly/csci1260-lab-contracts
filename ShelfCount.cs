@@ -8,13 +8,13 @@ namespace Lab2
 {
     public class ShelfCount : IEquatable<ShelfCount>, IComparable<ShelfCount>
     {
-        private string aisle;
-        private int slot;
-        private double valueOnHand;
+        private string _aisle;
+        private int _slot;
+        private double _valueOnHand;
 
-        public string Aisle { get;}
+        public string Aisle { get; }
         public int Slot { get; }
-        public double ValueOnHand { get; }
+        public double ValueOnHand { get ; }
 
         public ShelfCount(string aisle, int slot, double valueOnHand)
         {
@@ -60,7 +60,7 @@ namespace Lab2
 
         public override string ToString()
         {
-            return String.Format("{0,-6} #{1} {2,8:N2}", Aisle, Slot, valueOnHand);
+            return String.Format("{0,-6} #{1} {2,8:N2}", Aisle, Slot, ValueOnHand);
         }
     }
 }
