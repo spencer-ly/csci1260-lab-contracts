@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Lab2
 {
+    // Aisle ascending (a,b) Value descending (b,a) Slot ascending (a,b)
     public class GroupedByKey : IComparer<ShelfCount>
     {
         public int Compare(ShelfCount a, ShelfCount b)

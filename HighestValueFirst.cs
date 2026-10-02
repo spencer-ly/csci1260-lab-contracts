@@ -8,6 +8,7 @@ namespace Lab2
 {
     public class HighestValueFirst : IComparer<ShelfCount>
     {
+        // if b greater than 'a' it returns as if a is null (1), if equal, they compare
         public int Compare(ShelfCount a, ShelfCount b) 
         { 
             // if compared is null return 1

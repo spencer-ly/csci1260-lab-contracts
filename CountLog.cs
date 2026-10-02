@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Lab2
 {
+    // produces text inside .txt file, checks if file opens/closes 
     public class CountLog : IDisposable
     {
         private StreamWriter _writer;

@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 
 namespace Lab2
 {
+    // ShelfCount stores the values, Equals(ShelfCount r) returns false when other is null, 
+    // Equals(object obj) overrides to ShelfCount or is null when isnt,
+    // produces hashcode for Aisle, Slot
+    // overrides ToString method to format values
     public class ShelfCount : IEquatable<ShelfCount>, IComparable<ShelfCount>
     {
         private string _aisle;
