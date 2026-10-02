@@ -1,92 +1,135 @@
 ﻿using Lab2;
+using System.Reflection.Emit;
+using System.Threading.Channels;
 
-//1
-Shop manager = new Shop ("River City Supply");
-//2
-Console.Write($"Opening catalog: ");
-Show(manager);
-Console.Write("\n");
-Console.Write("Loading five records... \n");
-//3
-
-StockItem honey = new PerishableGood("HON01", "Wildflower honey", 8m, 12, 1.5, 2);
-StockItem kettle = new DurableGood("KTL11", "Cast iron kettle", 24m, 5, 4.0, 24);
-StockItem cheddar = new PerishableGood("CHZ07", "Farm cheddar wedge", 3.5m, 40, 0.5, 9);
-StockItem knifeSharpening = new ServiceItem("SRV20", "Knife sharpening", 60m, 2, 2.5);
-StockItem giftWrapping = new ServiceItem("SRV21", "Gift wrapping", 15m, 3, 1);
-//4
-
-//StockItem bad = new StockItem("X", "Nope", 1m, 1); 
-//CS0144: Cannot create instance of abstract type or interface 'StockItem'
-
-
-honey.Receive(6);       //request 1
-//honey.Receive(6);       //request 1
-kettle.Release(2);      //request 2
-kettle.Release(99);     //request 3
-cheddar.Receive(-5);    //request 4
-//5
-
-manager.Add(honey);
-manager.Add(kettle);
-manager.Add(cheddar);
-manager.Add(knifeSharpening);
-manager.Add(giftWrapping);
-
-List<StockItem> list = new List<StockItem>
+class Program
 {
-    honey, kettle, cheddar, knifeSharpening, giftWrapping
+    static void Main(string[] args)
+    {
+        Console.WriteLine($"=== RIVER CITY SUPPLY ===");
+        Console.WriteLine();
+
+        ShelfCount dairy = new ShelfCount("DAIRY", 3, 21.50);
+        ShelfCount dry = new ShelfCount("DRY", 1, 19.00);
+        ShelfCount dairy2 = new ShelfCount("DAIRY", 1, 15.00);
+        ShelfCount dry2 = new ShelfCount("DRY", 1, 19.00);
+        ShelfCount dairy3 = new ShelfCount("DAIRY", 3, 18.75);
+        ShelfCount frozen = new ShelfCount("FROZEN", 2, 30.00);
+        ShelfCount dry3 = new ShelfCount("DRY", 4, 12.50);
+
+        int position = 1;
+
+        // table order
+        List<ShelfCount> records = new List<ShelfCount>
+{
+    dairy, dry, dairy2, dry2, dairy3, frozen, dry3
 };
 
+        Console.Write("Seven records created, in this order:\n");
+        foreach (ShelfCount record in records)
+        {
+            string list = String.Format(" {0,2} {1}", position, record);
+            Console.WriteLine(list);
+            position++;
+        }
+        Console.WriteLine();
+        // Contract 1
+        Console.WriteLine("Contract 1: Equals and GetHashCode");
 
-if (!manager.Add(honey))
-    Console.WriteLine("  REJECTED: duplicate SKU HON01");
-
-Console.Write("Recording four movements...\n");
-
-kettle = manager.Find("KTL11");
-if (kettle != null && !kettle.Release(99))
-    Console.WriteLine("  REJECTED: release of 99 from KTL11");
-
-cheddar = manager.Find("CHZ07");
-if (cheddar != null && !cheddar.Receive(-5))
-    Console.WriteLine("  REJECTED: release of -5 from CHZ07");
-
-int movementsAccepted = 0;
-knifeSharpening = manager.Find("SRV20");
-if (knifeSharpening.Sku == "SRV20")
-    movementsAccepted++;
-giftWrapping = manager.Find("SRV21");
-if (giftWrapping.Sku == "SRV21")
-    movementsAccepted++;
-//6
-Console.Write($"Records accepted: {manager.Count}\n");
-Console.Write($"Movements accepeted: {movementsAccepted}\n");
-
-static void Show(IReportable r)
+        // hashset
+        HashSet<ShelfCount> hashSet = new HashSet<ShelfCount>
 {
-    Console.Write(r.ReportLine());
+    dairy, dry, dairy2, dry2, dairy3, frozen, dry3
+};
+
+        string record1 = String.Format(" {0,-50}{1,6}", "Record 1 equals record 5 (same key, new value)?", records[0].Equals(records[4]));
+        string record2 = String.Format(" {0,-50}{1,6}", "Record 2 equals record 4 (identical)?", records[1].Equals(records[3]));
+        string record3 = String.Format(" {0,-50}{1,6}", "Record 1 equals record 3?", records[0].Equals(records[2]));
+        string record4 = String.Format(" {0,-50}{1,6}", "Record 2 and record 4 are the same object?", ReferenceEquals(records[1], records[3]));
+        string record5 = String.Format(" {0,-50}{1,6}", "Equal records report equal hash codes?", records[0].GetHashCode() == records[4].GetHashCode());
+        string recordsCreated = String.Format(" {0,-50}{1,6}", "Records created: ", records.Count);
+        string recordsDistinct = String.Format(" {0,-50}{1,6}", "Distinct records in set:", hashSet.Count);
+
+        Console.WriteLine(record1);
+        Console.WriteLine(record2);
+        Console.WriteLine(record3);
+        Console.WriteLine(record4);
+        Console.WriteLine(record5);
+        Console.WriteLine(recordsCreated);
+        Console.WriteLine(recordsDistinct);
+
+        Console.WriteLine();
+        // Contract 2
+        List<ShelfCount> distinct = new List<ShelfCount>(hashSet); //hashset copied to List<ShelfCount> for rest of program
+        distinct.Sort();
+        Console.WriteLine("Contract 2: CompareTo, the natural order");
+        foreach (ShelfCount record in distinct)
+        {
+            string list = String.Format("  {0}", record);
+            Console.WriteLine(list);
+        }
+
+        Console.WriteLine();
+
+        //Contract 3
+        distinct.Sort(new HighestValueFirst());
+
+        Console.WriteLine("Contract 3: a comparer, chosen at the call site");
+        Console.WriteLine("  HighestValueFirst");
+
+        foreach (ShelfCount record in distinct)
+        {
+            string list = string.Format("    {0}", record);
+            Console.WriteLine(list);
+        }
+
+        distinct.Sort(new GroupedByKey());
+        Console.WriteLine("  GroupedByKey");
+        foreach (ShelfCount record in distinct)
+        {
+            string list = string.Format("    {0}", record);
+            Console.WriteLine(list);
+        }
+
+        Console.WriteLine();
+
+        // Contract 4
+        distinct.Sort(new HighestValueFirst());
+        Console.WriteLine("Contract 4: cleanup that runs even when the code throws");
+        CountLog log = null;
+        try
+        {
+            using (log = new CountLog("count-log.txt"))
+            {
+                for (int i = 0; i < 3; i++)
+                    log.Write(distinct[i]);
+
+                throw new InvalidOperationException("scanner fault after 3 writes");
+            }
+        }
+        catch (InvalidOperationException ex)
+        {
+            Console.WriteLine("  Caught: " + ex.Message);
+        }
+
+        bool safeTwice = true;
+        try { log.Dispose(); } catch { safeTwice = false; }
+
+        string recordLog = String.Format("    {0,-50}{1,6}", "The log closed itself?", log.IsClosed);
+        string recordLog2 = String.Format("    {0,-50}{1,6}", "Closing it a second time was safe?", safeTwice);
+        string recordLog3 = String.Format("    {0,-50}{1,6}", "Lines the log wrote before the fault:", log.Count);
+
+        string[] file = File.ReadAllLines("count-log.txt");
+
+        Console.WriteLine(recordLog);
+        Console.WriteLine(recordLog2);
+        Console.WriteLine(recordLog3);
+
+        Console.WriteLine("   count-log.txt now says:");
+        foreach (string line in file)
+        {
+            string lines = String.Format("    {0}", line);
+            Console.WriteLine(lines);
+        }
+    }
 }
-
-Console.Write($"Top record: {cheddar}\n");
-
-manager.SortByValue();
-
-manager.PrintReport();
-
-Console.WriteLine("\n");
-
-
-Console.Write("Contract check\n");
-Console.Write($"  Records signing IDiscountable: {manager.SignedCount()} \n");
-Console.Write($"  Records signing IDiscountable: {manager.OnSaleCount()} \n");
-Console.Write($"  Difference between the two totals: {manager.TotalValue() - manager.SaleValue():N2}\n");
-
-Console.Write("Composition check\n");
-Console.Write($"  Movements recorded by HON01: {honey.MoveCount}");
-Console.Write($"{honey.MovementLines()} \n");
-Console.Write($"  Movements recorded by KTL11: {kettle.MoveCount}");
-Console.Write($"{kettle.MovementLines()} \n");
-Console.Write($"  Movements recorded by CHZ07: {cheddar.MoveCount}");
-Console.Write($"{cheddar.MovementLines()} \n");
-

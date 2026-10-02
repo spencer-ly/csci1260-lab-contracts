@@ -28,8 +28,9 @@ namespace Lab2
 
         public void Write(ShelfCount r)
         {
-            String.Format("{0,3} {1}", Count/*, somethign else*/); 
             _count++;
+            _writer.WriteLine("{0,3} {1}", Count, r); 
+  
         }
 
         public void Dispose()
@@ -38,7 +39,7 @@ namespace Lab2
 
             else
             {
-                String.Format("LOG CLOSED, {0} lines written", Count);
+                _writer.WriteLine("LOG CLOSED, {0} lines written", Count);
                 _writer.Dispose();
                 _isClosed = true;
             }
